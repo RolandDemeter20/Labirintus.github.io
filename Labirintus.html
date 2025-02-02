@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labirintus</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            flex-direction: column;
+        }
+
+        .maze {
+            display: grid;
+            grid-template-columns: repeat(20, 25px);
+            grid-template-rows: repeat(20, 25px);
+            gap: 2px;
+        }
+
+        .cell {
+            width: 25px;
+            height: 25px;
+            background-color: white;
+            border: 1px black;
+        }
+
+        .wall {
+            background-color: cornflowerblue;
+        }
+
+        .goal {
+            background-color: green;
+        }
+
+        .player {
+            background-color: red;
+        }
+
+        .reset-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="maze" id="maze"></div>
+    <p id="message"></p>
+    <button class="reset-button" onclick="resetGame()">Játék újrakezdése</button>
+
+    <script>
+        const mazeLayout = Array(20).fill().map(() => Array(20).fill(0));
+
+        for (let i = 0; i < 20; i++) {
+            mazeLayout[0][i] = 1;
+            mazeLayout[19][i] = 1;
+            mazeLayout[i][0] = 1;
+            mazeLayout[i][19] = 1;
+        }
+
+        const additionalWalls = [
+            [0, 0, 20, "horizontal"],
+            [2, 0, 16, "horizontal"],
+            [4, 4, 12, "horizontal"],
+            [6, 6, 8, "horizontal"],
+            [13, 6, 4, "horizontal"],
+            [13, 9, 4, "horizontal"],
+            [15, 3, 10, "horizontal"],
+            [17, 4, 17, "horizontal"],
+            [19, 0, 20, "horizontal"],
+            [0, 0, 20, "vertical"],
+            [2, 2, 16, "vertical"],
+            [4, 4, 10, "vertical"],
+            [6, 6, 9, "vertical"],
+            [6, 13, 8, "vertical"],
+            [6, 11, 6, "vertical"],
+            [6, 8, 6, "vertical"],
+            [4, 15, 13, "vertical"],
+            [1, 17, 17, "vertical"],
+            [0, 19, 20, "vertical"]
+        ];
+
+        additionalWalls.forEach(([y, x, length, direction]) => {
+            for (let i = 0; i < length; i++) {
+                if (direction === "horizontal" && x + i < 20) {
+                    mazeLayout[y][x + i] = 1;
+                } else if (direction === "vertical" && y + i < 20) {
+                    mazeLayout[y + i][x] = 1;
+                }
+            }
+        });
+
+        mazeLayout[18][18] = 2;
+        let playerPosition = { x: 1, y: 1 };
+
+        const maze = document.getElementById("maze");
+        const message = document.getElementById("message");
+
+        function createMaze() {
+            maze.innerHTML = "";
+            for (let y = 0; y < mazeLayout.length; y++) {
+                for (let x = 0; x < mazeLayout[y].length; x++) {
+                    const cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    if (mazeLayout[y][x] === 1) cell.classList.add("wall");
+                    if (mazeLayout[y][x] === 2) cell.classList.add("goal");
+                    if (x === playerPosition.x && y === playerPosition.y) cell.classList.add("player");
+                    maze.appendChild(cell);
+                }
+            }
+        }
+
+        function movePlayer(event) {
+            const keyMap = {
+                ArrowUp: { x: 0, y: -1 },
+                ArrowDown: { x: 0, y: 1 },
+                ArrowLeft: { x: -1, y: 0 },
+                ArrowRight: { x: 1, y: 0 }
+            };
+
+            const move = keyMap[event.key];
+            if (move) {
+                const newX = playerPosition.x + move.x;
+                const newY = playerPosition.y + move.y;
+                if (mazeLayout[newY] && (mazeLayout[newY][newX] === 0 || mazeLayout[newY][newX] === 2)) {
+                    playerPosition = { x: newX, y: newY };
+                    createMaze();
+
+                    if (mazeLayout[newY][newX] === 2) {
+                        message.textContent = "Nagyon szééééép, ki is jutottál!";
+                    }
+                }
+            }
+        }
+
+        function resetGame() {
+            playerPosition = { x: 1, y: 1 };
+            message.textContent = "";
+            createMaze();
+        }
+
+        document.addEventListener("keydown", movePlayer);
+        createMaze();
+    </script>
+</body>
+</html>
